@@ -94,7 +94,8 @@ const TIPOS = {
   AF: {nom:"Abono familiar",    acc:"#E9B912", acceso:"Dos adultos y menores de 16",        precio:"$130.000"},
   AS: {nom:"Abono socio",       acc:"#6FBF8B", acceso:"Una persona · socio al día",         precio:"$60.000"},
   AH: {nom:"Abono hernandiano", acc:"#C6D2DE", acceso:"Dos personas · asiento en balcón",   precio:"$120.000"},
-  DIR:{nom:"Credencial institucional", acc:"#EEF3F7", acceso:"Acceso permanente",           precio:"Institucional"}
+  DIR:{nom:"Credencial institucional", acc:"#EEF3F7", acceso:"Acceso permanente",           precio:"Institucional"},
+  SOC:{nom:"Carnet de socio",     acc:"#8FD3A8", acceso:"Beneficios en comercios",           precio:"Socio al día"}
 };
 
 const ABC = "ACDEFHJKLMNPRTUVWXY349";
@@ -186,10 +187,13 @@ function dorso(cr){
   <text x="78" y="932" font-family="Arial, sans-serif" font-size="25" fill="#9AA5B0">Mostrá este carnet en los comercios adheridos</text>
   <text x="78" y="972" font-family="Arial, sans-serif" font-size="25" fill="#9AA5B0">del barrio y accedé a los beneficios vigentes.</text>
   <line x1="78" y1="1032" x2="1002" y2="1032" stroke="#222A34" stroke-width="2"/>
-  <text x="78" y="1090" font-family="Arial, sans-serif" font-size="23" fill="#6E7A85">Válido en las 11 fechas de local de la fase regular.</text>
-  <text x="78" y="1130" font-family="Arial, sans-serif" font-size="23" fill="#6E7A85">Se registra en puerta en cada fecha. No incluye playoffs.</text>
+  ${cr.t === "SOC"
+    ? '<text x="78" y="1090" font-family="Arial, sans-serif" font-size="23" fill="#6E7A85">Válido mientras la cuota social esté al día.</text>' +
+      '<text x="78" y="1130" font-family="Arial, sans-serif" font-size="23" fill="#6E7A85">No habilita el ingreso a los partidos.</text>'
+    : '<text x="78" y="1090" font-family="Arial, sans-serif" font-size="23" fill="#6E7A85">Válido en las 11 fechas de local de la fase regular.</text>' +
+      '<text x="78" y="1130" font-family="Arial, sans-serif" font-size="23" fill="#6E7A85">Se registra en puerta en cada fecha. No incluye playoffs.</text>'}
   <rect x="78" y="1180" width="924" height="106" rx="10" fill="#0C1116" stroke="#222A34" stroke-width="2" stroke-dasharray="7 6"/>
-  <text x="540" y="1242" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" fill="#4C5762" letter-spacing="5">ESPACIO SPONSOR</text>
+  <text x="540" y="1228" text-anchor="middle" font-family="Arial, sans-serif" font-weight="bold" font-size="24" fill="#E9B912" letter-spacing="3">BENEFICIOS EN COMERCIOS DEL BARRIO</text><text x="540" y="1264" text-anchor="middle" font-family="Arial, sans-serif" font-size="21" fill="#6E7A85">carnet-jh/beneficios.html</text>
 </svg>`;
 }
 
@@ -213,9 +217,11 @@ function credDe(par){
   }
   if (TIPOS[t]){
     const n = par.get("n") || "Sin titular";
-    return {t:t, sup:"Titular", titular:n, big:"26", ghost:"26",
-            detalle:TIPOS[t].nom + " · 11 fechas de local",
-            cod:codigo(t + "|" + n)};
+    const det = t === "SOC"
+      ? "Comunidad Hernandiana · Beneficios en comercios"
+      : TIPOS[t].nom + " · 11 fechas de local";
+    return {t:t, sup:"Socio", titular:n, big:"26", ghost:"26",
+            detalle:det, cod:codigo(t + "|" + n)};
   }
   return null;
 }
@@ -314,7 +320,7 @@ if (par.get("v") === "planilla") {
       <button class="pri" data-dir="${i}">Copiar link</button></td></tr>`;
   });
   let opts = "";
-  Object.keys(TIPOS).filter(k => k !== "PF").forEach(k => {
+  Object.keys(TIPOS).filter(k => !["PF","DIR","SOC"].includes(k)).forEach(k => {
     opts += `<option value="${k}">${TIPOS[k].nom} — ${TIPOS[k].precio}</option>`;
   });
   app.innerHTML = `<div class="panel">
@@ -343,6 +349,17 @@ if (par.get("v") === "planilla") {
       <h2>Pases del plantel</h2>
       <p>Doce, uno por jugador. Se los mandás al jugador y él se lo pasa a su familia.</p>
       <table><thead><tr><th>N°</th><th>Credencial</th><th>Código</th><th></th></tr></thead><tbody>${filas}</tbody></table>
+    </div>
+
+    <div class="caja">
+      <h2>Carnets de socio</h2>
+      <p>Prueba con socios del club. Da acceso a los beneficios en comercios, no al ingreso a los partidos.</p>
+      <div class="fila2">
+        <div><label class="campo" for="soc">Nombre del socio</label><input type="text" id="soc" placeholder="Pérez, Juan"></div>
+        <div style="flex:0 0 auto;display:flex;gap:8px"><button id="versoc">Ver</button>
+          <button class="pri" id="emisoc">Generar link</button></div>
+      </div>
+      <div class="salida" id="salsoc"></div>
     </div>
 
     <div class="caja">
@@ -399,6 +416,22 @@ if (par.get("v") === "planilla") {
       if (roles[i].trim()) q += "&r=" + encodeURIComponent(roles[i].trim());
       verCarnet(credDe(new URLSearchParams(q)));
     });
+  });
+  function socCred(){
+    const n = document.getElementById("soc").value.trim();
+    if (!n){ document.getElementById("soc").focus(); return null; }
+    return n;
+  }
+  document.getElementById("versoc").addEventListener("click", function(){
+    const n = socCred(); if (!n) return;
+    verCarnet(credDe(new URLSearchParams("t=SOC&n=" + encodeURIComponent(n))));
+  });
+  document.getElementById("emisoc").addEventListener("click", function(){
+    const n = socCred(); if (!n) return;
+    const url = raiz() + "?t=SOC&n=" + encodeURIComponent(n);
+    const sa = document.getElementById("salsoc");
+    sa.style.display = "block"; sa.textContent = url;
+    copiar(url, this);
   });
   document.getElementById("verab").addEventListener("click", function(){
     const n = document.getElementById("tit").value.trim();
