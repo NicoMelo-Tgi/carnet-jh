@@ -5,6 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#05070A">
 <title>Credenciales JH 2026</title>
+<meta property="og:title" content="Carnet Hernandiano · Club José Hernández">
+<meta property="og:description" content="Credenciales de acceso · Liga Metropolitana 2026">
+<meta property="og:image" content="https://nicomelo-tgi.github.io/carnet-jh/img-ferri.png">
+<meta name="twitter:card" content="summary_large_image">
 <style>
   :root{--bg:#05070A;--panel:#10151B;--line:#222A34;--celeste:#7FBCEA;
         --hueso:#EEF3F7;--mudo:#7A8792;--oro:#E9B912}
@@ -79,6 +83,8 @@ const DIR = [
   {n:"Juan Manuel Signorelli",r:"Presidencia"},
   {n:"Daniela Signorelli",    r:""}
 ];
+const slugify = s => s.normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+  .toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");
 const W = 1080, H = 1350;
 const esc = s => String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
 
@@ -353,7 +359,10 @@ if (par.get("v") === "planilla") {
   </div>`;
 
   if (!publicado) document.getElementById("avisoPub").style.display = "block";
-  const raiz = () => document.getElementById("base").value.trim().replace(/\?.*$/, "");
+  const raiz = () => {
+    let r = document.getElementById("base").value.trim().replace(/\?.*$/, "");
+    return r.endsWith("/") ? r : r + "/";
+  };
   function copiar(url, btn){
     navigator.clipboard.writeText(url).then(() => {
       const t = btn.textContent; btn.textContent = "Copiado"; btn.classList.add("ok");
@@ -361,7 +370,11 @@ if (par.get("v") === "planilla") {
     }).catch(() => prompt("Copiá el link:", url));
   }
   app.querySelectorAll("button[data-pf]").forEach(b => {
-    b.addEventListener("click", () => copiar(raiz() + "?t=PF&j=" + b.dataset.pf, b));
+    b.addEventListener("click", () => {
+      const j = JUG[+b.dataset.pf];
+      const sl = slugify(j.ape) + (j.ape === "Cabanillas" ? "-" + j.nom.charAt(0).toLowerCase() : "");
+      copiar(raiz() + sl + ".html", b);
+    });
   });
   app.querySelectorAll("button[data-ver-pf]").forEach(b => {
     b.addEventListener("click", () => {
@@ -376,9 +389,7 @@ if (par.get("v") === "planilla") {
   app.querySelectorAll("button[data-dir]").forEach(b => {
     b.addEventListener("click", () => {
       const i = +b.dataset.dir;
-      let url = raiz() + "?t=DIR&n=" + encodeURIComponent(DIR[i].n);
-      if (roles[i].trim()) url += "&r=" + encodeURIComponent(roles[i].trim());
-      copiar(url, b);
+      copiar(raiz() + slugify(DIR[i].n) + ".html", b);
     });
   });
   app.querySelectorAll("button[data-ver-dir]").forEach(b => {
