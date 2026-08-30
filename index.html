@@ -176,7 +176,7 @@ function frente(cr){
 
 function dorso(cr){
   const t = TIPOS[cr.t];
-  const payload = "CLUB JOSE HERNANDEZ | " + t.nom.toUpperCase() + " 2026 | " + cr.titular.toUpperCase() + " | " + cr.cod;
+  const payload = cr.url || location.href;
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}">
   <defs><linearGradient id="bgd" x1="0" y1="0" x2="1" y2="1">
     <stop offset="0" stop-color="#141A22"/><stop offset="1" stop-color="#070A0D"/></linearGradient></defs>
@@ -186,7 +186,7 @@ function dorso(cr){
   <line x1="78" y1="164" x2="1002" y2="164" stroke="#222A34" stroke-width="2"/>
   ${qrPath(qrRows(payload), 350, 236, 380)}
   <text x="540" y="700" text-anchor="middle" font-family="Consolas, Menlo, monospace" font-weight="bold" font-size="38" fill="${t.acc}" letter-spacing="5">${esc(cr.cod)}</text>
-  <text x="540" y="748" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" fill="#7A8792">Escaneá con la cámara del teléfono</text>
+  <text x="540" y="748" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" fill="#7A8792">Escaneá para abrir el carnet</text>
   <line x1="78" y1="820" x2="1002" y2="820" stroke="#222A34" stroke-width="2"/>
   <text x="78" y="884" font-family="Arial, sans-serif" font-weight="bold" font-size="27" fill="#E9B912" letter-spacing="4">COMUNIDAD HERNANDIANA</text>
   <text x="78" y="932" font-family="Arial, sans-serif" font-size="25" fill="#9AA5B0">Mostrá este carnet en los comercios adheridos</text>
@@ -299,6 +299,7 @@ if (par.get("v") === "planilla") {
   if (!cr){ app.innerHTML = '<div class="visor"><p class="pista">Credencial no válida.</p></div>'; }
   else {
     document.title = "Carnet Hernandiano · " + cr.titular;
+    cr.url = location.href;
     app.innerHTML = '<div class="visor"><div class="carnet" id="c"><div class="caras">' +
       '<div class="cara a">' + frente(cr) + '</div><div class="cara b">' + dorso(cr) + '</div>' +
       '</div></div><p class="pista">Tocá el carnet para ver el código de acceso</p>' +
@@ -409,8 +410,11 @@ if (par.get("v") === "planilla") {
   });
   app.querySelectorAll("button[data-ver-pf]").forEach(b => {
     b.addEventListener("click", () => {
-      const q = new URLSearchParams("t=PF&j=" + b.dataset.verPf);
-      verCarnet(credDe(q));
+      const j = JUG[+b.dataset.verPf];
+      const sl = slugify(j.ape) + (j.ape === "Cabanillas" ? "-" + j.nom.charAt(0).toLowerCase() : "");
+      const cr = credDe(new URLSearchParams("t=PF&j=" + b.dataset.verPf));
+      cr.url = raiz() + sl + ".html";
+      verCarnet(cr);
     });
   });
   const roles = DIR.map(d => d.r);
@@ -428,7 +432,9 @@ if (par.get("v") === "planilla") {
       const i = +b.dataset.verDir;
       let q = "t=DIR&n=" + encodeURIComponent(DIR[i].n);
       if (roles[i].trim()) q += "&r=" + encodeURIComponent(roles[i].trim());
-      verCarnet(credDe(new URLSearchParams(q)));
+      const cr = credDe(new URLSearchParams(q));
+      cr.url = raiz() + slugify(DIR[i].n) + ".html";
+      verCarnet(cr);
     });
   });
   function dirNuevo(){
@@ -439,7 +445,9 @@ if (par.get("v") === "planilla") {
   }
   document.getElementById("verdir").addEventListener("click", function(){
     const q = dirNuevo(); if (!q) return;
-    verCarnet(credDe(new URLSearchParams(q)));
+    const cr = credDe(new URLSearchParams(q));
+    cr.url = raiz() + "?" + q;
+    verCarnet(cr);
   });
   document.getElementById("emidir").addEventListener("click", function(){
     const q = dirNuevo(); if (!q) return;
@@ -455,7 +463,9 @@ if (par.get("v") === "planilla") {
   }
   document.getElementById("versoc").addEventListener("click", function(){
     const n = socCred(); if (!n) return;
-    verCarnet(credDe(new URLSearchParams("t=SOC&n=" + encodeURIComponent(n))));
+    const cr = credDe(new URLSearchParams("t=SOC&n=" + encodeURIComponent(n)));
+    cr.url = raiz() + "?t=SOC&n=" + encodeURIComponent(n);
+    verCarnet(cr);
   });
   document.getElementById("emisoc").addEventListener("click", function(){
     const n = socCred(); if (!n) return;
@@ -468,7 +478,9 @@ if (par.get("v") === "planilla") {
     const n = document.getElementById("tit").value.trim();
     const t = document.getElementById("tipo").value;
     if (!n){ document.getElementById("tit").focus(); return; }
-    verCarnet(credDe(new URLSearchParams("t=" + t + "&n=" + encodeURIComponent(n))));
+    const cr = credDe(new URLSearchParams("t=" + t + "&n=" + encodeURIComponent(n)));
+    cr.url = raiz() + "?t=" + t + "&n=" + encodeURIComponent(n);
+    verCarnet(cr);
   });
   document.getElementById("emitir").addEventListener("click", function(){
     const n = document.getElementById("tit").value.trim();
