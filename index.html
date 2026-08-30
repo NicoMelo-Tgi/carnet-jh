@@ -23,6 +23,9 @@
   .cara.b{position:absolute;inset:0;transform:rotateY(180deg)}
   .cara svg{width:100%;height:auto;display:block;border-radius:14px;box-shadow:0 18px 50px rgba(0,0,0,.6)}
   .pista{font-size:12.5px;color:var(--mudo)}
+  .benef{font-size:13.5px;font-weight:600;text-decoration:none;color:var(--oro);
+    border:1px solid rgba(233,185,18,.45);border-radius:99px;padding:10px 20px}
+  .benef:hover{background:rgba(233,185,18,.12)}
 
   .panel{max-width:940px;margin:0 auto;padding:24px 16px 70px}
   .caja{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin-bottom:20px}
@@ -81,7 +84,9 @@ const DIR = [
   {n:"Matías Bosio",          r:""},
   {n:"Tomás Toral",           r:"Tesorería"},
   {n:"Juan Manuel Signorelli",r:"Presidencia"},
-  {n:"Daniela Signorelli",    r:""}
+  {n:"Daniela Signorelli",    r:""},
+  {n:"Mailen Rodrigo",        r:""},
+  {n:"Daniela Stigliano",     r:""}
 ];
 const slugify = s => s.normalize("NFD").replace(/[\u0300-\u036f]/g,"")
   .toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");
@@ -250,6 +255,7 @@ function verCarnet(cr){
   o.innerHTML = '<div class="carnet" id="mc"><div class="caras">' +
     '<div class="cara a">' + frente(cr) + '</div><div class="cara b">' + dorso(cr) + '</div>' +
     '</div></div><p class="pista">Tocá el carnet para darlo vuelta</p>' +
+    '<a class="benef" href="beneficios.html" target="_blank" rel="noopener">Beneficios en comercios del barrio</a>' +
     '<div class="fila"><button class="pri" id="mf">Descargar frente</button>' +
     '<button id="md">Descargar dorso</button><button id="mx">Cerrar</button></div>';
   document.body.appendChild(o);
@@ -295,7 +301,8 @@ if (par.get("v") === "planilla") {
     document.title = "Carnet Hernandiano · " + cr.titular;
     app.innerHTML = '<div class="visor"><div class="carnet" id="c"><div class="caras">' +
       '<div class="cara a">' + frente(cr) + '</div><div class="cara b">' + dorso(cr) + '</div>' +
-      '</div></div><p class="pista">Tocá el carnet para ver el código de acceso</p></div>';
+      '</div></div><p class="pista">Tocá el carnet para ver el código de acceso</p>' +
+      '<a class="benef" href="beneficios.html">Beneficios en comercios del barrio</a></div>';
     const c = document.getElementById("c");
     c.addEventListener("click", () => c.classList.toggle("dado"));
   }
